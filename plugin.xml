@@ -184,7 +184,7 @@
 				<pod name="FirebaseMessaging" spec="12.3.0"/>
 				<pod name="FirebasePerformance" spec="12.3.0"/>
 				<pod name="FirebaseRemoteConfig" spec="12.3.0"/>
-				<pod name="FirebaseInAppMessaging" spec="12.3.0" disabled="true"/>
+				<!-- <pod name="FirebaseInAppMessaging" spec="12.3.0" disabled="true"/> -->
 				<pod name="FirebaseFirestore" spec="12.3.0"/>
 				<pod name="FirebaseCrashlytics" spec="12.3.0"/>
 				<pod name="FirebaseFunctions" spec="12.3.0"/>
