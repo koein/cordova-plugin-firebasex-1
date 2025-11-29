@@ -181,18 +181,18 @@
             <source url="https://cdn.cocoapods.org/" />
 
             <pod_target_xcconfig>
-                <IPHONEOS_DEPLOYMENT_TARGET>15.0</IPHONEOS_DEPLOYMENT_TARGET>
+                <IPHONEOS_DEPLOYMENT_TARGET>16.0</IPHONEOS_DEPLOYMENT_TARGET>
             </pod_target_xcconfig>
 
             <user_target_xcconfig>
-                <IPHONEOS_DEPLOYMENT_TARGET>15.0</IPHONEOS_DEPLOYMENT_TARGET>
+                <IPHONEOS_DEPLOYMENT_TARGET>16.0</IPHONEOS_DEPLOYMENT_TARGET>
             </user_target_xcconfig>
         </config>
 
         <!-- Podfile header override -->
         <podfile>
             <header>
-                platform :ios, '15.0'
+                platform :ios, '16.0'
             </header>
         </podfile>
 
