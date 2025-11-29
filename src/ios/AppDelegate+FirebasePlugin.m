@@ -4,6 +4,7 @@
 #import <objc/runtime.h>
 
 @import UserNotifications;
+@import FirebaseCore;
 @import FirebaseMessaging;
 
 @interface AppDelegate () <UNUserNotificationCenterDelegate, FIRMessagingDelegate>
@@ -30,7 +31,6 @@ static __weak id <UNUserNotificationCenterDelegate> _prevUserNotificationCenterD
 - (void)setApplicationInBackground:(NSNumber *)applicationInBackground {
     objc_setAssociatedObject(self, kApplicationInBackgroundKey, applicationInBackground, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
-
 - (NSNumber *)applicationInBackground {
     return objc_getAssociatedObject(self, kApplicationInBackgroundKey);
 }
@@ -38,38 +38,29 @@ static __weak id <UNUserNotificationCenterDelegate> _prevUserNotificationCenterD
 - (BOOL)application:(UIApplication *)application swizzledDidFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     [self application:application swizzledDidFinishLaunchingWithOptions:launchOptions];
 
-#if DEBUG
-    [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"/google/firebase/debug_mode"];
-    [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"/google/measurement/debug_mode"];
-#endif
+    instance = self;
 
-    @try {
-        instance = self;
-
-        if (![FIRApp defaultApp]) {
-            NSString *filePath = [[NSBundle mainBundle] pathForResource:@"GoogleService-Info" ofType:@"plist"];
-            if (filePath) {
-                FIROptions *options = [[FIROptions alloc] initWithContentsOfFile:filePath];
-                [FIRApp configureWithOptions:options];
-            } else {
-                [FIRApp configure];
-            }
-        }
-
-        if (self.isFCMEnabled) {
-            _prevUserNotificationCenterDelegate = [UNUserNotificationCenter currentNotificationCenter].delegate;
-            [UNUserNotificationCenter currentNotificationCenter].delegate = self;
-
-            [FIRMessaging messaging].delegate = self;
+    // Firebase Init
+    if (![FIRApp defaultApp]) {
+        NSString *filePath = [[NSBundle mainBundle] pathForResource:@"GoogleService-Info" ofType:@"plist"];
+        if (filePath) {
+            FIROptions *options = [[FIROptions alloc] initWithContentsOfFile:filePath];
+            [FIRApp configureWithOptions:options];
         } else {
-            [[FIRMessaging messaging] setAutoInitEnabled:NO];
+            [FIRApp configure];
         }
-
-        self.applicationInBackground = @(YES);
-
-    } @catch (NSException *exception) {
-        [FirebasePlugin.firebasePlugin handlePluginExceptionWithoutContext:exception];
     }
+
+    if (self.isFCMEnabled) {
+        _prevUserNotificationCenterDelegate = [UNUserNotificationCenter currentNotificationCenter].delegate;
+        [UNUserNotificationCenter currentNotificationCenter].delegate = self;
+
+        [FIRMessaging messaging].delegate = self;
+    } else {
+        [[FIRMessaging messaging] setAutoInitEnabled:NO];
+    }
+
+    self.applicationInBackground = @(YES);
 
     return YES;
 }
@@ -78,53 +69,73 @@ static __weak id <UNUserNotificationCenterDelegate> _prevUserNotificationCenterD
     return FirebasePlugin.firebasePlugin.isFCMEnabled;
 }
 
-#pragma mark - App State
-
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     self.applicationInBackground = @(NO);
-
-    @try {
-        [FirebasePlugin.firebasePlugin executeGlobalJavascript:@"FirebasePlugin._applicationDidBecomeActive()"];
-        [FirebasePlugin.firebasePlugin sendPendingNotifications];
-    } @catch (NSException *exception) {}
+    [FirebasePlugin.firebasePlugin executeGlobalJavascript:@"FirebasePlugin._applicationDidBecomeActive()"];
+    [FirebasePlugin.firebasePlugin sendPendingNotifications];
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application {
     self.applicationInBackground = @(YES);
-
-    @try {
-        [FirebasePlugin.firebasePlugin executeGlobalJavascript:@"FirebasePlugin._applicationDidEnterBackground()"];
-    } @catch (NSException *exception) {}
+    [FirebasePlugin.firebasePlugin executeGlobalJavascript:@"FirebasePlugin._applicationDidEnterBackground()"];
 }
 
-#pragma mark - FCM Token
+#pragma mark - FIRMessagingDelegate
 
 - (void)messaging:(FIRMessaging *)messaging didReceiveRegistrationToken:(NSString *)fcmToken {
-    @try {
-        [FirebasePlugin.firebasePlugin sendToken:fcmToken];
-    } @catch (NSException *exception) {}
+    [FirebasePlugin.firebasePlugin sendToken:fcmToken];
 }
-
-#pragma mark - APNS
 
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
     if (!self.isFCMEnabled) return;
-
     [FIRMessaging messaging].APNSToken = deviceToken;
     [FirebasePlugin.firebasePlugin sendApnsToken:[FirebasePlugin.firebasePlugin hexadecimalStringFromData:deviceToken]];
 }
 
-#pragma mark - Notification Handling
+#pragma mark - APNS Message Handling
 
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo
-fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
+    fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
 
     if (!self.isFCMEnabled) return;
 
     mutableUserInfo = [userInfo mutableCopy];
 
-    completionHandler(UIBackgroundFetchResultNewData);
+    [[FIRMessaging messaging] appDidReceiveMessage:userInfo];
+
     [FirebasePlugin.firebasePlugin sendNotification:mutableUserInfo];
+
+    completionHandler(UIBackgroundFetchResultNewData);
+}
+
+#pragma mark - Notification Delegates
+
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+       willPresentNotification:(UNNotification *)notification
+         withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler {
+
+    NSDictionary *userInfo = notification.request.content.userInfo;
+
+    [[FIRMessaging messaging] appDidReceiveMessage:userInfo];
+
+    [FirebasePlugin.firebasePlugin sendNotification:userInfo];
+
+    completionHandler(UNNotificationPresentationOptionAlert |
+                      UNNotificationPresentationOptionSound |
+                      UNNotificationPresentationOptionBadge);
+}
+
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+ didReceiveNotificationResponse:(UNNotificationResponse *)response
+          withCompletionHandler:(void (^)(void))completionHandler {
+
+    NSDictionary *userInfo = response.notification.request.content.userInfo;
+
+    [[FIRMessaging messaging] appDidReceiveMessage:userInfo];
+
+    [FirebasePlugin.firebasePlugin sendNotification:userInfo];
+
+    completionHandler();
 }
 
 @end
