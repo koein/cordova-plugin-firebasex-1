@@ -121,93 +121,101 @@
 	</platform>
 
 	<platform name="ios">
-		<hook type="before_plugin_install" src="scripts/ios/before_plugin_install.js" />
-		<hook type="after_plugin_install" src="scripts/ios/after_plugin_install.js" />
-		<hook type="before_plugin_uninstall" src="scripts/ios/before_plugin_uninstall.js" />
+    <hook type="before_plugin_install" src="scripts/ios/before_plugin_install.js" />
+    <hook type="after_plugin_install" src="scripts/ios/after_plugin_install.js" />
+    <hook type="before_plugin_uninstall" src="scripts/ios/before_plugin_uninstall.js" />
 
-		<preference name="IOS_USE_PRECOMPILED_FIRESTORE_POD" default="false" />
-		<preference name="IOS_FCM_ENABLED" default="true" />
+    <preference name="IOS_USE_PRECOMPILED_FIRESTORE_POD" default="false" />
+    <preference name="IOS_FCM_ENABLED" default="true" />
 
-		<js-module name="FirebasePlugin" src="www/firebase.js">
-			<clobbers target="FirebasePlugin" />
-		</js-module>
-		<config-file target="config.xml" parent="/*">
-			<feature name="FirebasePlugin">
-				<param name="ios-package" value="FirebasePlugin" />
-				<param name="onload" value="true" />
-			</feature>
-		</config-file>
+    <js-module name="FirebasePlugin" src="www/firebase.js">
+        <clobbers target="FirebasePlugin" />
+    </js-module>
 
-		<config-file target="*/Entitlements-Debug.plist" parent="aps-environment">
-			<string>development</string>
-		</config-file>
-		<config-file target="*/Entitlements-Release.plist" parent="aps-environment">
-			<string>production</string>
-		</config-file>
+    <!-- Add plugin feature -->
+    <config-file target="config.xml" parent="/*">
+        <feature name="FirebasePlugin">
+            <param name="ios-package" value="FirebasePlugin" />
+            <param name="onload" value="true" />
+        </feature>
+    </config-file>
 
+    <!-- Push Entitlements -->
+    <config-file target="*/Entitlements-Debug.plist" parent="aps-environment">
+        <string>development</string>
+    </config-file>
+    <config-file target="*/Entitlements-Release.plist" parent="aps-environment">
+        <string>production</string>
+    </config-file>
 
-		<config-file target="*-Info.plist" parent="UIBackgroundModes">
-			<array>
-				<string>remote-notification</string>
-			</array>
-		</config-file>
+    <!-- Remote notification background mode -->
+    <config-file target="*-Info.plist" parent="UIBackgroundModes">
+        <array>
+            <string>remote-notification</string>
+        </array>
+    </config-file>
 
-		<config-file target="*-Info.plist" parent="FIREBASE_MESSAGING_IMMEDIATE_PAYLOAD_DELIVERY">
-			<string>$FIREBASE_MESSAGING_IMMEDIATE_PAYLOAD_DELIVERY</string>
-		</config-file>
+    <!-- Immediate message delivery -->
+    <config-file target="*-Info.plist" parent="FIREBASE_MESSAGING_IMMEDIATE_PAYLOAD_DELIVERY">
+        <string>$FIREBASE_MESSAGING_IMMEDIATE_PAYLOAD_DELIVERY</string>
+    </config-file>
 
-		<resource-file src="src/ios/GoogleService-Info.plist" />
+    <resource-file src="src/ios/GoogleService-Info.plist" />
 
-		<header-file src="src/ios/AppDelegate+FirebasePlugin.h" />
-		<source-file src="src/ios/AppDelegate+FirebasePlugin.m" />
-		<header-file src="src/ios/FirebasePlugin.h" />
-		<source-file src="src/ios/FirebasePlugin.m" />
-		<header-file src="src/ios/FirebaseWrapper.h" />
-		<header-file src="src/ios/FirebasePluginMessageReceiver.h" />
-		<source-file src="src/ios/FirebasePluginMessageReceiver.m" />
-		<header-file src="src/ios/FirebasePluginMessageReceiverManager.h" />
-		<source-file src="src/ios/FirebasePluginMessageReceiverManager.m" />
+    <!-- Source files -->
+    <header-file src="src/ios/AppDelegate+FirebasePlugin.h" />
+    <source-file src="src/ios/AppDelegate+FirebasePlugin.m" />
+    <header-file src="src/ios/FirebasePlugin.h" />
+    <source-file src="src/ios/FirebasePlugin.m" />
+    <header-file src="src/ios/FirebaseWrapper.h" />
+    <header-file src="src/ios/FirebasePluginMessageReceiver.h" />
+    <source-file src="src/ios/FirebasePluginMessageReceiver.m" />
+    <header-file src="src/ios/FirebasePluginMessageReceiverManager.h" />
+    <source-file src="src/ios/FirebasePluginMessageReceiverManager.m" />
 
-		<framework src="AuthenticationServices.framework" />
+    <framework src="AuthenticationServices.framework" />
 
-		<config>
-        <source url="https://cdn.cocoapods.org/"/>
+    <!-- FIXED COMPLETE PODSPEC BLOCK -->
+    <podspec>
+        <config>
+            <source url="https://cdn.cocoapods.org/" />
 
-        <pod_target_xcconfig>
-            <IPHONEOS_DEPLOYMENT_TARGET>15.0</IPHONEOS_DEPLOYMENT_TARGET>
-        </pod_target_xcconfig>
+            <pod_target_xcconfig>
+                <IPHONEOS_DEPLOYMENT_TARGET>15.0</IPHONEOS_DEPLOYMENT_TARGET>
+            </pod_target_xcconfig>
 
-        <user_target_xcconfig>
-            <IPHONEOS_DEPLOYMENT_TARGET>15.0</IPHONEOS_DEPLOYMENT_TARGET>
-        </user_target_xcconfig>
-    </config>
+            <user_target_xcconfig>
+                <IPHONEOS_DEPLOYMENT_TARGET>15.0</IPHONEOS_DEPLOYMENT_TARGET>
+            </user_target_xcconfig>
+        </config>
 
-    <podfile>
-        <header>
-            platform :ios, '15.0'
-        </header>
-    </podfile>
-			<pods use-frameworks="true">
-				<pod name="FirebaseCore" spec="12.3.0"/>
-				<pod name="FirebaseCoreExtension" spec="12.3.0"/>
-				<pod name="FirebaseAuth" spec="12.3.0"/>
-				<pod name="FirebaseAnalytics/Core" spec="12.3.0"/>
-				<pod name="FirebaseAnalytics/IdentitySupport" spec="12.3.0"/>
-				<!--<pod name="GoogleAdsOnDeviceConversion" spec="3.1.0"/>-->
-				<pod name="FirebaseMessaging" spec="12.3.0"/>
-				<pod name="FirebasePerformance" spec="12.3.0"/>
-				<pod name="FirebaseRemoteConfig" spec="12.3.0"/>
-				<!-- <pod name="FirebaseInAppMessaging" spec="12.3.0" disabled="true"/> -->
-				<pod name="FirebaseFirestore" spec="12.3.0"/>
-				<pod name="FirebaseCrashlytics" spec="12.3.0"/>
-				<pod name="FirebaseFunctions" spec="12.3.0"/>
-				<pod name="FirebaseInstallations" spec="12.3.0"/>
-				<pod name="GoogleSignIn" spec="9.0.0"/>
-				<pod name="GoogleTagManager" spec="9.0.0"/>
-			</pods>
-		</podspec>
+        <!-- Podfile header override -->
+        <podfile>
+            <header>
+                platform :ios, '15.0'
+            </header>
+        </podfile>
 
-	</platform>
+        <!-- Pods -->
+        <pods use-frameworks="true">
+            <pod name="FirebaseCore" spec="12.3.0"/>
+            <pod name="FirebaseCoreExtension" spec="12.3.0"/>
+            <pod name="FirebaseAuth" spec="12.3.0"/>
+            <pod name="FirebaseAnalytics/Core" spec="12.3.0"/>
+            <pod name="FirebaseAnalytics/IdentitySupport" spec="12.3.0"/>
+            <pod name="FirebaseMessaging" spec="12.3.0"/>
+            <pod name="FirebasePerformance" spec="12.3.0"/>
+            <pod name="FirebaseRemoteConfig" spec="12.3.0"/>
+            <pod name="FirebaseFirestore" spec="12.3.0"/>
+            <pod name="FirebaseCrashlytics" spec="12.3.0"/>
+            <pod name="FirebaseFunctions" spec="12.3.0"/>
+            <pod name="FirebaseInstallations" spec="12.3.0"/>
+            <pod name="GoogleSignIn" spec="9.0.0"/>
+            <pod name="GoogleTagManager" spec="9.0.0"/>
+        </pods>
+    </podspec>
+</platform>
+
 
 	<hook type="after_prepare" src="scripts/after_prepare.js" />
 </plugin>
