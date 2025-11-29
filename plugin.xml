@@ -170,16 +170,23 @@
 
 		<framework src="AuthenticationServices.framework" />
 
-		<podspec>
-			<config>
-				<source url="https://cdn.cocoapods.org/"/>
-				<pod_target_xcconfig>
+		<config>
+        <source url="https://cdn.cocoapods.org/"/>
+
+        <pod_target_xcconfig>
             <IPHONEOS_DEPLOYMENT_TARGET>15.0</IPHONEOS_DEPLOYMENT_TARGET>
         </pod_target_xcconfig>
+
         <user_target_xcconfig>
             <IPHONEOS_DEPLOYMENT_TARGET>15.0</IPHONEOS_DEPLOYMENT_TARGET>
         </user_target_xcconfig>
-			</config>
+    </config>
+
+    <podfile>
+        <header>
+            platform :ios, '15.0'
+        </header>
+    </podfile>
 			<pods use-frameworks="true">
 				<pod name="FirebaseCore" spec="12.3.0"/>
 				<pod name="FirebaseCoreExtension" spec="12.3.0"/>
